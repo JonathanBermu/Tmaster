@@ -1,44 +1,66 @@
 package com.example.Users.Controllers;
 
-import com.example.Users.Models.UserModel;
+import com.example.Users.Repositories.RecoveryCodeRepository;
 import com.example.Users.Repositories.UserRepository;
+import com.example.Users.Services.RoleService;
 import com.example.Users.Services.UserService;
+import com.example.Users.Types.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jasypt.util.password.StrongPasswordEncryptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class UserController {
+
+    StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
     @Autowired
     private UserService userService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RoleService roleService;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    @GetMapping(value = "/users")
-    public List<UserModel> getUser(@RequestBody UserModel userModel) {
-        return userService.getUser(userModel);
-    }
 
+    @Autowired
+    private RecoveryCodeRepository recoveryCodeRepository;
     @PostMapping(value = "/add_user")
-    public @ResponseBody String addUser(@RequestParam String username, @RequestParam String id) {
-        UserModel newUser = new UserModel();
-        newUser.setId(id);
-        newUser.setUsername(username);
-        userRepository.save(newUser);
-        return "saved";
+    public ResponseEntity addUser(@RequestBody AddUserType request, @RequestHeader (HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
+        if(!roleService.isAdmin(authorization)){
+            return new ResponseEntity<>("You can't do this action", HttpStatus.UNAUTHORIZED);
+        }
+        return userService.addUser(request);
     }
     @GetMapping(value = "/login")
-    public ResponseEntity login(@RequestParam String username, @RequestParam String id) {
-        Optional<UserModel> res = userRepository.findById(id);
-        String user = res.map(UserModel::getUsername).orElseGet(() -> "");
-        if(user.equals(username)) {
-            return new ResponseEntity<>("Hello world", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Username or id is are not valid", HttpStatus.UNAUTHORIZED);
+    public ResponseEntity login(@RequestBody LoginType request) {
+        return userService.login(request);
+    }
+    @GetMapping(value = "get_users")
+    public ResponseEntity getUsers(@RequestHeader (HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
+        if(!roleService.isAdmin(authorization)){
+            return new ResponseEntity<>("You can't do this action", HttpStatus.UNAUTHORIZED);
         }
+        return userService.getUsers();
+    }
+    @GetMapping(value = "send_recover_password_email")
+    public ResponseEntity sendRecoverPassword(@RequestBody SendRecoverMailType email) throws JsonProcessingException {
+        return userService.sendRecoverPasswordEmail(email);
+    }
+    @PostMapping(value = "recover_password")
+    public ResponseEntity recoverPassword (@RequestBody RecoverPasswordType request) {
+        return userService.recoverPassword(request);
+    }
+    @PostMapping(value = "update_user")
+    public ResponseEntity updateUser(@RequestHeader (HttpHeaders.AUTHORIZATION) String authorization, @RequestBody UpdateUserType request) throws JsonProcessingException {
+        if(!roleService.isAdmin(authorization)){
+            return new ResponseEntity<>("You can't do this action", HttpStatus.UNAUTHORIZED);
+        }
+        return userService.updateUser(request);
     }
 }
