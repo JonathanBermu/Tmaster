@@ -10,17 +10,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 @RestController
 public class PlayerController {
     @Autowired
     private PlayerService playerService;
     @PostMapping(value = "players/add_player")
-    public ResponseEntity addUser(@RequestBody AddPlayer request) {
+    public ResponseEntity addUser(@RequestBody AddPlayer request) throws IOException {
         return playerService.addPlayer(request);
 
     }
     @PostMapping(value = "players/update_player")
-    public ResponseEntity updatePlayer(@RequestBody UpdatePlayer request) {
+    public ResponseEntity updatePlayer(@RequestBody UpdatePlayer request) throws IOException {
         return playerService.updatePlayer(request);
     }
     @PostMapping(value = "players/delete_player")

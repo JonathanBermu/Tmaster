@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 
 @RestController
 public class UserController {
@@ -38,7 +40,7 @@ public class UserController {
         return userService.addUser(request);
     }
     @GetMapping(value = "/login")
-    public ResponseEntity login(@RequestBody LoginType request) {
+    public ResponseEntity login(@RequestBody LoginType request) throws IOException {
         return userService.login(request);
     }
     @GetMapping(value = "get_users")

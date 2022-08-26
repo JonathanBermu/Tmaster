@@ -21,7 +21,6 @@ public class RoleService {
         Base64.Decoder decoder = Base64.getUrlDecoder();
         String payload = new String(decoder.decode(chunks[1]));
         JsonNode payloadParse = parseJson.parse(payload);
-        System.out.println(payloadParse);
         return payloadParse.get("role").asInt();
     }
 

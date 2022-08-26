@@ -12,13 +12,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 @RestController
 public class TeamController {
     @Autowired
     private TeamService teamService;
 
     @PostMapping(value = "teams/add_team")
-    public ResponseEntity addTeam(@RequestBody AddTeamType request) {
+    public ResponseEntity addTeam(@RequestBody AddTeamType request) throws IOException {
         return teamService.addTeam(request);
     }
     @PostMapping(value = "teams/delete_team")
@@ -26,7 +28,7 @@ public class TeamController {
         return teamService.deleteTeam(request);
     }
     @PostMapping(value = "teams/update_team")
-    public ResponseEntity updateTeam(@RequestBody UpdateTeamType request) {
+    public ResponseEntity updateTeam(@RequestBody UpdateTeamType request) throws IOException {
         return teamService.updateTeam(request);
     }
 }

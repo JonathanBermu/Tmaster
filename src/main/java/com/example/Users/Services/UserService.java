@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.security.Key;
 import java.util.*;
 
@@ -54,7 +55,7 @@ public class UserService {
         }
         return new ResponseEntity<>("User saved", HttpStatus.OK);
     }
-    public ResponseEntity login(LoginType request) {
+    public ResponseEntity login(LoginType request) throws IOException {
         List<UserModel> resuser = userRepository.findByUsername(request.getUsername());
         if(resuser.size() < 1) {
             return new ResponseEntity<>("Incorrect username or password", HttpStatus.UNAUTHORIZED);
@@ -110,7 +111,6 @@ public class UserService {
                 Date createdAt = recoveryCode.getCreatedAt();
                 Date now = new Date();
                 long diff = (now.getTime()/1000) - (createdAt.getTime()/1000);
-                System.out.println(diff);
                 if(diff < 60*30){
                     Integer user_id = recoveryCode.getUserId();
                     List<UserModel> users = userRepository.findById(user_id);
