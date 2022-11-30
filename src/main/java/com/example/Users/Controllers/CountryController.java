@@ -4,14 +4,12 @@ import com.example.Users.Services.CountryService;
 import com.example.Users.Types.Country.AddCountryType;
 import com.example.Users.Types.Country.DeleteCountryType;
 import com.example.Users.Types.Country.UpdateCountryType;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins= "http://localhost:4000")
 public class CountryController {
     @Autowired
     private CountryService countryService;
@@ -29,5 +27,9 @@ public class CountryController {
     @PostMapping(value = "countries/update_country")
     public ResponseEntity updateCountry(@RequestBody UpdateCountryType request) {
         return countryService.updateCountry(request);
+    }
+    @GetMapping(value = "countries/all")
+    public ResponseEntity getAllCountries() {
+        return countryService.getAllCountries();
     }
 }

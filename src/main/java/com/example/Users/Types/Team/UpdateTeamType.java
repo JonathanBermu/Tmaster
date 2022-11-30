@@ -5,6 +5,15 @@ public class UpdateTeamType {
     private String name;
     private String img;
     private Integer countryId;
+    private Integer sport_id;
+
+    public Integer getSport_id() {
+        return sport_id;
+    }
+
+    public void setSport_id(Integer sport_id) {
+        this.sport_id = sport_id;
+    }
 
     public Integer getId() {
         return id;

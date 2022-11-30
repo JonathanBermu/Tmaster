@@ -6,13 +6,12 @@ import com.example.Users.Types.Player.DeletePlayer;
 import com.example.Users.Types.Player.UpdatePlayer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
 @RestController
+@CrossOrigin(origins= "http://localhost:4000")
 public class PlayerController {
     @Autowired
     private PlayerService playerService;
@@ -28,5 +27,22 @@ public class PlayerController {
     @PostMapping(value = "players/delete_player")
     public ResponseEntity deleteUser(@RequestBody DeletePlayer request) {
         return playerService.deletePlayer(request);
+    }
+
+    @GetMapping(value = "players/all")
+    public ResponseEntity getAllPlayers() {
+        return playerService.getAllPlayers();
+    }
+    @GetMapping(value = "players/all/country/{countryId}")
+    public ResponseEntity getAllPlayersByCountryId(@PathVariable("countryId") Integer countryId) {
+        return playerService.getAllPlayersByCountry(countryId);
+    }
+    @GetMapping(value = "players/all/team/{teamId}")
+    public ResponseEntity getAllPlayersByTeamId(@PathVariable("teamId") Integer teamId) {
+        return playerService.getAllPlayersByTeam(teamId);
+    }
+    @GetMapping(value = "players/{playerId}")
+    public ResponseEntity getPlayer(@PathVariable("playerId") Integer playerId) {
+        return playerService.getPlayer(playerId);
     }
 }

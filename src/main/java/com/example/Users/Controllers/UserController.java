@@ -18,6 +18,7 @@ import java.io.IOException;
 
 
 @RestController
+@CrossOrigin(origins= "http://localhost:4000")
 public class UserController {
 
     StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
@@ -39,26 +40,31 @@ public class UserController {
         }
         return userService.addUser(request);
     }
-    @GetMapping(value = "/login")
+
+    @PostMapping(value = "/login")
     public ResponseEntity login(@RequestBody LoginType request) throws IOException {
         return userService.login(request);
     }
-    @GetMapping(value = "get_users")
+    @PostMapping(value = "/get_user")
+    public ResponseEntity getUser(@RequestHeader (HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
+        return userService.getUser(authorization);
+    }
+    @GetMapping(value = "/get_users")
     public ResponseEntity getUsers(@RequestHeader (HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
         if(!roleService.isAdmin(authorization)){
             return new ResponseEntity<>("You can't do this action", HttpStatus.UNAUTHORIZED);
         }
         return userService.getUsers();
     }
-    @GetMapping(value = "send_recover_password_email")
+    @GetMapping(value = "/send_recover_password_email")
     public ResponseEntity sendRecoverPassword(@RequestBody SendRecoverMailType email) throws JsonProcessingException {
         return userService.sendRecoverPasswordEmail(email);
     }
-    @PostMapping(value = "recover_password")
+    @PostMapping(value = "/recover_password")
     public ResponseEntity recoverPassword (@RequestBody RecoverPasswordType request) {
         return userService.recoverPassword(request);
     }
-    @PostMapping(value = "update_user")
+    @PostMapping(value = "/update_user")
     public ResponseEntity updateUser(@RequestHeader (HttpHeaders.AUTHORIZATION) String authorization, @RequestBody UpdateUserType request) throws JsonProcessingException {
         if(!roleService.isAdmin(authorization)){
             return new ResponseEntity<>("You can't do this action", HttpStatus.UNAUTHORIZED);

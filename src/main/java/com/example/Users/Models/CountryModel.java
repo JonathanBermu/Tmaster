@@ -2,12 +2,18 @@ package com.example.Users.Models;
 
 import net.bytebuddy.dynamic.loading.InjectionClassLoader;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 public class CountryModel {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    private String name;
+    private Integer state;
+
     public Integer getId() {
         return id;
     }
@@ -24,11 +30,6 @@ public class CountryModel {
         this.name = name;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    private String name;
-
     public Integer getState() {
         return state;
     }
@@ -37,5 +38,4 @@ public class CountryModel {
         this.state = state;
     }
 
-    private Integer state;
 }

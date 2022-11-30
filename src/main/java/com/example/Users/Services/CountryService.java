@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CountryService {
     @Autowired
@@ -33,6 +35,10 @@ public class CountryService {
         country.setName(request.getName());
         countryRepository.save(country);
         return new ResponseEntity<>("Country updated successfully", HttpStatus.OK);
+    }
+    public ResponseEntity getAllCountries() {
+        List<CountryModel> countries = countryRepository.findAll();
+        return new ResponseEntity<>(countries, HttpStatus.OK);
     }
 
 }

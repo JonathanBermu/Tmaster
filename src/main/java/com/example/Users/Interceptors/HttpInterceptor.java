@@ -6,6 +6,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -21,9 +23,15 @@ public class HttpInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String url = request.getRequestURL().toString();
-        if(url.contains("login")
-                && url.contains("send_recover_password_email")
-                && url.contains("recover_password")
+        String method = request.getMethod();
+        System.out.println(method);
+        System.out.println(url);
+        if(!url.contains("login")
+                && !url.contains("send_recover_password_email")
+                && !url.contains("recover_password")
+                && !url.contains("tournaments/general")
+                && !url.contains("error")
+                && !method.equals("OPTIONS")
         ) {
             String auth = request.getHeader("Authorization");
             auth = auth.replace("Bearer ", "");
@@ -35,6 +43,7 @@ public class HttpInterceptor implements HandlerInterceptor {
                     .build()
                     .parseClaimsJws(auth);
         }
+        System.out.println("pasando");
         return true;
     }
 }

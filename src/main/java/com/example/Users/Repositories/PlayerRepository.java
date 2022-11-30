@@ -8,4 +8,7 @@ import java.util.List;
 @Repository
 public interface PlayerRepository extends CrudRepository<PlayerModel, String> {
     List<PlayerModel> getById(Integer id);
+    List<PlayerModel> findAll();
+    List<PlayerModel> findByCountryId(Integer id);
+    List<PlayerModel> findByTeamId(Integer id);
 }

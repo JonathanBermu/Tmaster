@@ -1,9 +1,6 @@
 package com.example.Users.Models;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
 
 @Entity
@@ -15,6 +12,34 @@ public class PlayerModel {
     private String lastName;
     private Date birthDate;
     private String img;
+    private Double height;
+    private Integer weight;
+    private Integer rightHanded;
+    private Date createdAt;
+    private Integer state;
+
+    @ManyToOne
+    @JoinColumn(name = "country_id")
+    private CountryModel country;
+    @ManyToOne
+    @JoinColumn(name="team_id")
+    private TeamModel team;
+
+    public TeamModel getTeam() {
+        return team;
+    }
+
+    public void setTeam(TeamModel team) {
+        this.team = team;
+    }
+
+    public CountryModel getCountry() {
+        return country;
+    }
+
+    public void setCountry(CountryModel country) {
+        this.country = country;
+    }
 
     public String getImg() {
         return img;
@@ -63,61 +88,29 @@ public class PlayerModel {
     public void setHeight(Double height) {
         this.height = height;
     }
-
     public Integer getWeight() {
         return weight;
     }
-
     public void setWeight(Integer weight) {
         this.weight = weight;
     }
-
     public Integer getRightHanded() {
         return rightHanded;
     }
-
     public void setRightHanded(Integer rightHanded) {
         this.rightHanded = rightHanded;
     }
-
-    public Integer getCountryId() {
-        return countryId;
-    }
-
-    public void setCountryId(Integer countryId) {
-        this.countryId = countryId;
-    }
-
-    public Integer getTeamId() {
-        return teamId;
-    }
-
-    public void setTeamId(Integer teamId) {
-        this.teamId = teamId;
-    }
-
     public Date getCreatedAt() {
         return createdAt;
     }
-
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-
     public Integer getState() {
         return state;
     }
-
     public void setState(Integer state) {
         this.state = state;
     }
-
-    private Double height;
-    private Integer weight;
-    private Integer rightHanded;
-    private Integer countryId;
-    private Integer teamId;
-    private Date createdAt;
-    private Integer state;
 
 }

@@ -5,6 +5,10 @@ import com.example.Users.Models.UserModel;
 import com.example.Users.Repositories.RecoveryCodeRepository;
 import com.example.Users.Repositories.UserRepository;
 import com.example.Users.Types.*;
+import com.example.Users.config.Json;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -31,6 +35,11 @@ public class UserService {
     private EmailService emailService;
     @Autowired
     private RecoveryCodeRepository recoveryCodeRepository;
+    @Autowired
+    private PayloadService payloadService;
+
+    @Autowired
+    private Json json;
     StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
 
     public ResponseEntity addUser(AddUserType request) {
@@ -56,9 +65,9 @@ public class UserService {
         return new ResponseEntity<>("User saved", HttpStatus.OK);
     }
     public ResponseEntity login(LoginType request) throws IOException {
-        List<UserModel> resuser = userRepository.findByUsername(request.getUsername());
+        List<UserModel> resuser = userRepository.findByEmail(request.getEmail());
         if(resuser.size() < 1) {
-            return new ResponseEntity<>("Incorrect username or password", HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>("Incorrect email or password", HttpStatus.UNAUTHORIZED);
         }
         String dataPasswordEncrypted = resuser.get(0).getPassword();
         long dataId = resuser.get(0).getId();
@@ -102,6 +111,12 @@ public class UserService {
         }
         return new ResponseEntity<>("If user exists and email was sent to recover password", HttpStatus.OK);
     }
+    public ResponseEntity getUser(String auth) throws JsonProcessingException {
+        JsonNode parsed_json = payloadService.getPayload(auth);
+        Integer userId = parsed_json.get("user_id").asInt();
+        UserModel user = userRepository.findById(userId).get(0);
+        return new ResponseEntity(user, HttpStatus.OK);
+    }
     public ResponseEntity recoverPassword(@RequestBody RecoverPasswordType request) {
         String uuid = request.getRecoveryCode();
         if(request.getPassword().equals(request.getRepeatPassword())){
@@ -129,7 +144,7 @@ public class UserService {
         return new ResponseEntity<>("Error while updating password", HttpStatus.BAD_REQUEST);
     }
     public ResponseEntity updateUser(UpdateUserType request) {
-        UserModel user = (UserModel) userRepository.findById(request.getId()).get(0);
+        UserModel user = (UserModel) userRepository.findById(Math.toIntExact(request.getId())).get(0);
         String originalEmail = user.getEmail();
         String originalUsername = user.getUsername();
         user.setAge(request.getAge());
