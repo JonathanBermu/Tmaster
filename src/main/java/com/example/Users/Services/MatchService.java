@@ -112,8 +112,9 @@ public class MatchService {
         else return false;
     }
     public ResponseEntity setMatchResultsBulk(List<SetMatchResults> req){
+        MatchModel firstMatch = matchRepository.findById(req.get(0).getId()).get(0);
+        Tournament tournament = tournamentRepository.findById(firstMatch.getTournament().getId()).get(0);
         List<MatchModel> matches = new ArrayList<>();
-        Tournament tournament = tournamentRepository.findById(matches.get(0).getTournament().getId()).get(0);
         AtomicReference<Boolean> discrepancyResults = new AtomicReference<>(false);
         req.forEach(m -> {
             MatchModel match = matchRepository.findById(m.getId()).get(0);
