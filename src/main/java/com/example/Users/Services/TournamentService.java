@@ -9,6 +9,8 @@ import com.example.Users.Types.Tournaments.UpdateTournament;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class TournamentService {
+    @Autowired
+    private Environment environment;
     @Autowired
     private TeamRepository teamRepository;
     @Autowired
@@ -39,6 +43,7 @@ public class TournamentService {
     private LeaguePositionsRepository leaguePositionsRepository;
 
     public ResponseEntity getAllTournaments() {
+        System.out.println(environment.getProperty("baeldung.presentation"));
         List<Tournament> tournaments = (List<Tournament>) tournamentRepository.findAllByOrderByIdDesc();
         return new ResponseEntity(tournaments, HttpStatus.OK);
     }
@@ -67,9 +72,11 @@ public class TournamentService {
         JsonNode userPayload = payloadService.getPayload(authorization);
         Integer teamsAmount = request.getTeamsIds().size();
         if(teamsAmount != request.getTeams()) {
+            System.out.println("omg1");
             return errors.badRequest();
         }
         if(teamsAmount % 2 != 0) {
+            System.out.println("omg2");
             return errors.badRequest();
         }
         ArrayList<TeamModel> teams = new ArrayList<>();
@@ -83,6 +90,7 @@ public class TournamentService {
             }
         });
         if(!teamsTournamentSameSport.get()) {
+            System.out.println("omg3");
             return errors.badRequest();
         }
         /* variables for key tournament*/

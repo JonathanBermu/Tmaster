@@ -8,7 +8,6 @@ import com.example.Users.Types.*;
 import com.example.Users.config.Json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -164,5 +163,26 @@ public class UserService {
             return new ResponseEntity<>("There was an error, please try again later", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>("User updated successfully", HttpStatus.OK);
+    }
+    public ResponseEntity OAuthLogin(OauthLogin request) throws JsonProcessingException {
+        List<UserModel> searchUser = userRepository.findByAuthId(request.getAuthId());
+        Integer userCount = searchUser.size();
+        UserModel user;
+        user = userCount == 0 ? new UserModel() : searchUser.get(0);
+        user.setAuthId(request.getAuthId());
+        user.setLatestToken(request.getToken());
+        System.out.println("OMG " + request.getToken());
+        JsonNode info = payloadService.getPayload(request.getToken());
+        userRepository.save(user);
+
+        Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        String secret =  "MichaelJacksonIsVeryVeryVeryBlackIMnOtGoingtolie";
+        Key secretKey = new SecretKeySpec(Base64.getDecoder().decode(secret),
+                SignatureAlgorithm.HS256.getJcaName());
+        String jwt = Jwts.builder()
+                .claim("user_id", user.getId())
+                .signWith(secretKey)
+                .compact();
+        return new ResponseEntity<>(jwt, HttpStatus.OK);
     }
 }

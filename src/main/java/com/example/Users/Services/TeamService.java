@@ -85,23 +85,26 @@ public class TeamService {
     public ResponseEntity deleteTeam(DeleteTeamType request, String auth) throws JsonProcessingException {
         JsonNode userPayload = payloadService.getPayload(auth);
         TeamModel team = teamRepository.findById(request.getId()).get(0);
-        if(team.getUser().getId() == userPayload.get("user_id").asInt()) {
+        System.out.println(team.getUser().getId() + "----" + userPayload.get("user_id").asInt());
+        if(team.getUser().getId() !=  userPayload.get("user_id").asInt()) {
             return new ResponseEntity<>("You can't perform this action", HttpStatus.BAD_REQUEST);
         }
+        System.out.println("ok3");
         team.setState(2);
         teamRepository.save(team);
         return new ResponseEntity<>("Team has been deleted", HttpStatus.OK);
     }
 
     public ResponseEntity getAllTeams() {
-        List<TeamModel> teams = teamRepository.findAll();
+        List<TeamModel> teams = teamRepository.findByState(1);
         return new ResponseEntity<>(teams, HttpStatus.OK);
     }
 
     public ResponseEntity getUserTeams(String auth) throws IOException {
         JsonNode userPayload = payloadService.getPayload(auth);
+        System.out.println(userPayload.get("user_id"));
         Integer userId = Math.toIntExact(userPayload.get("user_id").asLong());
-        List<TeamModel> teams = teamRepository.findByUserId(Long.valueOf(userId));
+        List<TeamModel> teams = teamRepository.findByUserIdAndStateOrderBySportId(Long.valueOf(userId), 1);
         for (Integer i = 0; i < teams.size(); i++) {
             teams.get(i).setImg( aws.getObject(teams.get(i).getImg()));
         }

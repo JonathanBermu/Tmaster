@@ -251,7 +251,7 @@ public class MatchService {
             TeamModel visitor = teamRepository.findById(req.getVisitorTeamId()).get(0);
             MatchModel match = matchRepository.findById(req.getMatchId()).get(0);
             match.setLocal(local);
-            match.setLocal(visitor);
+            match.setVisitor(visitor);
             matchRepository.save(match);
         });
         return new ResponseEntity<>("Teams set successfully", HttpStatus.OK);

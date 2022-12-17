@@ -10,5 +10,6 @@ public interface TeamRepository extends CrudRepository<TeamModel, String>{
     List<TeamModel> findById(Integer id);
     List<TeamModel> findAll();
     List<TeamModel> findByCountryId(Integer id);
-    List<TeamModel> findByUserId(Long id);
+    List<TeamModel> findByUserIdAndStateOrderBySportId(Long id, Integer state);
+    List<TeamModel> findByState(Integer state);
 }

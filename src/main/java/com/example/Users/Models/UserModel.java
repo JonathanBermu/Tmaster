@@ -7,16 +7,36 @@ public class UserModel {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(name = "username", nullable = true, unique = true)
     private String username;
     @Column(name = "age", nullable = true)
     private Integer age;
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", nullable = true, unique = true)
     private String email;
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = true)
     private String password;
     @Column(name = "role", nullable = true)
     private String role;
+    @Column(name="latest_token", nullable = true, length = 2000)
+    private String latestToken;
+    @Column(name="auth_id", nullable = true)
+    private String authId;
+
+    public String getLatestToken() {
+        return latestToken;
+    }
+
+    public void setLatestToken(String latestToken) {
+        this.latestToken = latestToken;
+    }
+
+    public String getAuthId() {
+        return authId;
+    }
+
+    public void setAuthId(String authId) {
+        this.authId = authId;
+    }
 
     public Integer getAge() {
         return age;

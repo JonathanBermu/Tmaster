@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -29,8 +30,11 @@ public class HttpInterceptor implements HandlerInterceptor {
         if(!url.contains("login")
                 && !url.contains("send_recover_password_email")
                 && !url.contains("recover_password")
-                && !url.contains("tournaments/general")
+                && !url.contains("tournaments/")
+                && !url.contains("matches/tournament")
+                && !url.contains("league")
                 && !url.contains("error")
+                && !url.contains("oauth_login")
                 && !method.equals("OPTIONS")
         ) {
             String auth = request.getHeader("Authorization");

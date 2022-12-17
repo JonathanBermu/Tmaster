@@ -71,4 +71,8 @@ public class UserController {
         }
         return userService.updateUser(request);
     }
+    @PostMapping(value = "/oauth_login")
+    public ResponseEntity oauthLogin(@RequestBody OauthLogin login) throws JsonProcessingException {
+        return userService.OAuthLogin(login);
+    }
 }
