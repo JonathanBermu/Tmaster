@@ -28,6 +28,7 @@ public class HttpInterceptor implements HandlerInterceptor {
         System.out.println(method);
         System.out.println(url);
         if(!url.contains("login")
+                && !url.contains("8080")
                 && !url.contains("send_recover_password_email")
                 && !url.contains("recover_password")
                 && !url.contains("tournaments/")

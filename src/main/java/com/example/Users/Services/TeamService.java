@@ -1,5 +1,6 @@
 package com.example.Users.Services;
 
+import com.example.Users.Mocks.*;
 import com.example.Users.Models.CountryModel;
 import com.example.Users.Models.SportsModel;
 import com.example.Users.Models.TeamModel;
@@ -8,6 +9,9 @@ import com.example.Users.Repositories.CountryRepository;
 import com.example.Users.Repositories.SportsRepository;
 import com.example.Users.Repositories.TeamRepository;
 import com.example.Users.Repositories.UserRepository;
+import com.example.Users.Types.Interfaces.AWSServiceInterface;
+import com.example.Users.Types.Interfaces.PayloadServiceInterface;
+import com.example.Users.Types.Interfaces.ValidateBase64Interface;
 import com.example.Users.Types.Team.AddTeamType;
 import com.example.Users.Types.Team.DeleteTeamType;
 import com.example.Users.Types.Team.UpdateTeamType;
@@ -20,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TeamService {
@@ -39,59 +44,76 @@ public class TeamService {
     @Autowired
     private UserRepository userRepository;
 
-    public ResponseEntity addTeam(AddTeamType request, String auth) throws IOException {
-        if(!validateBase64.isImage(request.getImg())) {
+    public ResponseEntity addTeam(AddTeamType request, String auth, Optional<Boolean> mocking) throws IOException {
+        TeamRepository teamRepo = mocking.isPresent() ? new TeamRepositoryMock() : teamRepository;
+        ValidateBase64Interface validateB64 = mocking.isPresent() ? new ValidateBase64Mock() : validateBase64;
+        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
+        CountryRepository countryRepo = mocking.isPresent() ? new CountryRepositoryMock() : countryRepository;
+        SportsRepository sportsRepo = mocking.isPresent() ? new SportsRepositoryMock() : sportsRepository;
+        UserRepository userRepo = mocking.isPresent() ? new UserRepositoryMock() : userRepository;
+        AWSServiceInterface awsS = mocking.isPresent() ?  new AWSServiceMock() : aws;
+        if(!validateB64.isImage(request.getImg())) {
             return new ResponseEntity<> ("Bad request", HttpStatus.BAD_REQUEST);
         }
-        JsonNode userPayload = payloadService.getPayload(auth);
-        CountryModel country = countryRepository.findById(request.getCountryId()).get(0);
-        String imgType = validateBase64.imageType(request.getImg());
+        JsonNode userPayload = payloadS.getPayload(auth);
+        CountryModel country = countryRepo.findById(request.getCountryId()).get(0);
+        String imgType = validateB64.imageType(request.getImg());
         TeamModel team = new TeamModel();
         team.setName(request.getName());
-        String imgName = aws.addFile(request.getImg(), imgType);
+        String imgName = awsS.addFile(request.getImg(), imgType);
         team.setImg(imgName + imgType);
         team.setState(1);
         team.setCountry(country);
-        SportsModel sport = sportsRepository.findById(request.getSport_id()).get(0);
+        SportsModel sport = sportsRepo.findById(request.getSport_id()).get(0);
         team.setSport(sport);
-        UserModel user = userRepository.findById(Math.toIntExact(userPayload.get("user_id").asInt())).get(0);
+        UserModel user = userRepo.findById(Math.toIntExact(userPayload.get("user_id").asInt())).get(0);
         team.setUser(user);
-        teamRepository.save(team);
+        teamRepo.save(team);
         return new ResponseEntity<>("Team added successfully", HttpStatus.OK);
 
     }
-    public ResponseEntity updateTeam(UpdateTeamType request, String auth) throws IOException {
-        JsonNode userPayload = payloadService.getPayload(auth);
-        TeamModel team = teamRepository.findById(request.getId()).get(0);
+    public ResponseEntity updateTeam(UpdateTeamType request, String auth, Optional<Boolean> mocking) throws IOException {
+        TeamRepository teamRepo = mocking.isPresent() ? new TeamRepositoryMock() : teamRepository;
+        ValidateBase64Interface validateB64 = mocking.isPresent() ? new ValidateBase64Mock() : validateBase64;
+        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
+        CountryRepository countryRepo = mocking.isPresent() ? new CountryRepositoryMock() : countryRepository;
+        SportsRepository sportsRepo = mocking.isPresent() ? new SportsRepositoryMock() : sportsRepository;
+        UserRepository userRepo = mocking.isPresent() ? new UserRepositoryMock() : userRepository;
+        AWSServiceInterface awsS = mocking.isPresent() ?  new AWSServiceMock() : aws;
+
+        JsonNode userPayload = payloadS.getPayload(auth);
+        TeamModel team = teamRepo.findById(request.getId()).get(0);
         if(team.getUser().getId() != userPayload.get("user_id").asInt()) {
             return new ResponseEntity<>("You can't perform this action", HttpStatus.BAD_REQUEST);
         }
         if(request.getImg().equals("")) {
             team.setImg(team.getImg());
         } else {
-            String imgType = validateBase64.imageType(request.getImg());
-            String imgName = aws.addFile(request.getImg(), imgType);
+            String imgType = validateB64.imageType(request.getImg());
+            String imgName = awsS.addFile(request.getImg(), imgType);
             team.setImg(imgName + imgType);
         }
-        CountryModel country = countryRepository.findById(request.getCountryId()).get(0);
-        SportsModel sport = sportsRepository.findById(request.getSport_id()).get(0);
+        CountryModel country = countryRepo.findById(request.getCountryId()).get(0);
+        SportsModel sport = sportsRepo.findById(request.getSport_id()).get(0);
         team.setName(request.getName());
         team.setCountry(country);
         team.setSport(sport);
-        teamRepository.save(team);
+        teamRepo.save(team);
         return new ResponseEntity<>("Team updated succesfully", HttpStatus.OK);
     }
 
-    public ResponseEntity deleteTeam(DeleteTeamType request, String auth) throws JsonProcessingException {
-        JsonNode userPayload = payloadService.getPayload(auth);
-        TeamModel team = teamRepository.findById(request.getId()).get(0);
+    public ResponseEntity deleteTeam(DeleteTeamType request, String auth, Optional<Boolean> mocking) throws JsonProcessingException {
+        TeamRepository teamRepo = mocking.isPresent() ? new TeamRepositoryMock() : teamRepository;
+        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
+        JsonNode userPayload = payloadS.getPayload(auth);
+        TeamModel team = teamRepo.findById(request.getId()).get(0);
         System.out.println(team.getUser().getId() + "----" + userPayload.get("user_id").asInt());
         if(team.getUser().getId() !=  userPayload.get("user_id").asInt()) {
             return new ResponseEntity<>("You can't perform this action", HttpStatus.BAD_REQUEST);
         }
         System.out.println("ok3");
         team.setState(2);
-        teamRepository.save(team);
+        teamRepo.save(team);
         return new ResponseEntity<>("Team has been deleted", HttpStatus.OK);
     }
 

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins= "http://localhost:4000")
@@ -20,15 +21,15 @@ public class TeamController {
 
     @PostMapping(value = "teams/add_team")
     public ResponseEntity addTeam(@RequestBody AddTeamType request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws IOException {
-        return teamService.addTeam(request, authorization);
+        return teamService.addTeam(request, authorization, Optional.empty());
     }
     @PostMapping(value = "teams/delete_team")
     public ResponseEntity deleteTeam(@RequestBody DeleteTeamType request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
-        return teamService.deleteTeam(request, authorization);
+        return teamService.deleteTeam(request, authorization, Optional.empty());
     }
     @PostMapping(value = "teams/update_team")
     public ResponseEntity updateTeam(@RequestBody UpdateTeamType request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws IOException {
-        return teamService.updateTeam(request, authorization);
+        return teamService.updateTeam(request, authorization, Optional.empty());
     }
     @GetMapping(value = "teams/all")
     public ResponseEntity getAllTeams() {

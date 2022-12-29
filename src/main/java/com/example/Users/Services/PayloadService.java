@@ -1,5 +1,6 @@
 package com.example.Users.Services;
 
+import com.example.Users.Types.Interfaces.PayloadServiceInterface;
 import com.example.Users.config.Json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Base64;
 
 @Service
-public class PayloadService {
+public class PayloadService implements PayloadServiceInterface {
     @Autowired
     private Json json;
     public JsonNode getPayload(String auth) throws JsonProcessingException {

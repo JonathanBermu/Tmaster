@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.IOUtils;
+import com.example.Users.Types.Interfaces.AWSServiceInterface;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Base64Utils;
 
@@ -22,7 +23,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Service
-public class AWSService {
+public class AWSService implements AWSServiceInterface {
     AWSCredentials credentials = new BasicAWSCredentials("AKIAX2LFZLO6VEG7YSM4", "aZIrlLzbs5k22IOs7sEA7k5lCRal2zJBrkctayYy");
     AmazonS3 s3client = AmazonS3ClientBuilder
             .standard()

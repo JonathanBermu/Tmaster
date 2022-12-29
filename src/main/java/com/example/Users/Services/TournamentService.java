@@ -1,8 +1,13 @@
 package com.example.Users.Services;
 
+import com.example.Users.Mocks.*;
 import com.example.Users.Models.*;
 import com.example.Users.Repositories.*;
 import com.example.Users.Types.Errors.Errors;
+import com.example.Users.Types.Interfaces.AWSServiceInterface;
+import com.example.Users.Types.Interfaces.ErrorsInterface;
+import com.example.Users.Types.Interfaces.PayloadServiceInterface;
+import com.example.Users.Types.Interfaces.ValidateBase64Interface;
 import com.example.Users.Types.MatchMade;
 import com.example.Users.Types.Tournaments.AddNewTournament;
 import com.example.Users.Types.Tournaments.UpdateTournament;
@@ -45,6 +50,9 @@ public class TournamentService {
     public ResponseEntity getAllTournaments() {
         System.out.println(environment.getProperty("baeldung.presentation"));
         List<Tournament> tournaments = (List<Tournament>) tournamentRepository.findAllByOrderByIdDesc();
+        if(tournaments.size() == 0) {
+            return new ResponseEntity("Not enough tournaments", HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity(tournaments, HttpStatus.OK);
     }
     public ResponseEntity getTournament(Integer id) {
@@ -57,31 +65,43 @@ public class TournamentService {
         return new ResponseEntity(tournaments, HttpStatus.OK);
     }
 
-    public ResponseEntity updateTournament(UpdateTournament req, String auth) throws JsonProcessingException {
-        JsonNode userPayload = payloadService.getPayload(auth);
-        Tournament tournament = tournamentRepository.findById(req.getId()).get(0);
-        if(tournament.getUser().getId() == userPayload.get("user_id").asInt()) {
+    public ResponseEntity updateTournament(UpdateTournament req, String auth, Optional<Boolean> mocking) throws JsonProcessingException {
+        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
+        TournamentRepository tournamentRepo = mocking.isPresent() ? new TournamentRespositoryMock() : tournamentRepository;
+
+        JsonNode userPayload = payloadS.getPayload(auth);
+        Tournament tournament = tournamentRepo.findById(req.getId()).get(0);
+        if(tournament.getUser().getId() != userPayload.get("user_id").asInt()) {
             return new ResponseEntity<>("You can't perform this action", HttpStatus.BAD_REQUEST);
         }
         tournament.setName(req.getName());
-        tournamentRepository.save(tournament);
+        tournamentRepo.save(tournament);
         return new ResponseEntity<>("Tournament updated", HttpStatus.OK);
     }
 
-    public ResponseEntity addNewTournament(AddNewTournament request, String authorization) throws JsonProcessingException {
-        JsonNode userPayload = payloadService.getPayload(authorization);
+    public ResponseEntity addNewTournament(AddNewTournament request, String authorization, Optional<Boolean> mocking) throws JsonProcessingException {
+        TeamRepository teamRepo = mocking.isPresent() ? new TeamRepositoryMock() : teamRepository;
+        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
+        SportsRepository sportsRepo = mocking.isPresent() ? new SportsRepositoryMock() : sportsRepository;
+        UserRepository userRepo = mocking.isPresent() ? new UserRepositoryMock() : userRepository;
+        TournamentRepository tournamentRepo = mocking.isPresent() ? new TournamentRespositoryMock() : tournamentRepository;
+        MatchRepository matchRepo = mocking.isPresent() ? new MatchRepositoryMock() : matchRepository;
+        LeaguePositionsRepository leaguePosRepo = mocking.isPresent() ? new LeaguePositionsMock() : leaguePositionsRepository;
+        ErrorsInterface errorsS = mocking.isPresent() ? new ErrorsMock() : errors;
+
+        JsonNode userPayload = payloadS.getPayload(authorization);
         Integer teamsAmount = request.getTeamsIds().size();
         if(teamsAmount != request.getTeams()) {
             System.out.println("omg1");
-            return errors.badRequest();
+            return errorsS.badRequest();
         }
         if(teamsAmount % 2 != 0) {
             System.out.println("omg2");
-            return errors.badRequest();
+            return errorsS.badRequest();
         }
         ArrayList<TeamModel> teams = new ArrayList<>();
         request.getTeamsIds().forEach(el -> {
-             teams.add(teamRepository.findById(el).get(0));
+             teams.add(teamRepo.findById(el).get(0));
         });
         AtomicReference<Boolean> teamsTournamentSameSport = new AtomicReference<>(true);
         teams.forEach(team-> {
@@ -91,22 +111,22 @@ public class TournamentService {
         });
         if(!teamsTournamentSameSport.get()) {
             System.out.println("omg3");
-            return errors.badRequest();
+            return errorsS.badRequest();
         }
         /* variables for key tournament*/
         Integer numberTeams = request.getTeams();
         Integer rounds = this.getRounds(numberTeams, request.getType());
 
         Tournament tournament = new Tournament();
-        SportsModel sport = sportsRepository.findById(request.getSport_id()).get(0);
+        SportsModel sport = sportsRepo.findById(request.getSport_id()).get(0);
         tournament.setName(request.getName());
         tournament.setSport(sport);
         tournament.setTeams(request.getTeams());
         tournament.setRounds(rounds);
         tournament.setType(request.getType());
-        UserModel user = userRepository.findById(Math.toIntExact(userPayload.get("user_id").asInt())).get(0);
+        UserModel user = userRepo.findById(Math.toIntExact(userPayload.get("user_id").asInt())).get(0);
         tournament.setUser(user);
-        tournamentRepository.save(tournament);
+        tournamentRepo.save(tournament);
         teams.forEach(el -> {
             LeaguePositions result = new LeaguePositions();
             result.setTeamId(el);
@@ -117,7 +137,7 @@ public class TournamentService {
             result.setW(0);
             result.setGoalsAgainst(0);
             result.setTournament(tournament);
-            leaguePositionsRepository.save(result);
+            leaguePosRepo.save(result);
         });
 
 
@@ -134,7 +154,7 @@ public class TournamentService {
                     match.setRound(rounds);
                     /*match.setLocal(local);
                     match.setVisitor(visitor);*/
-                    matchRepository.save(match);
+                   matchRepo.save(match);
                     System.out.println("Round " + rounds + " match created");
                 }
 
@@ -148,7 +168,7 @@ public class TournamentService {
                         MatchModel match = new MatchModel();
                         match.setTournament(tournament);
                         match.setRound(currentRound);
-                        matchRepository.save(match);
+                        matchRepo.save(match);
                         System.out.println("Round " + currentRound + " match created");
                     }
                 }
@@ -164,7 +184,7 @@ public class TournamentService {
                     match.setRound(rounds);
                     /*match.setLocal(local);
                     match.setVisitor(visitor);*/
-                    matchRepository.save(match);
+                    matchRepo.save(match);
                     System.out.println("Round " + rounds + " 1st leg match created");
                     /*visitor = teams.get(indexesOrderBF.get(j));
                     local = teams.get(indexesOrderBF.get(j + 1));*/
@@ -173,7 +193,7 @@ public class TournamentService {
                     match2ndLeg.setRound(rounds);
                     /*match2ndLeg.setLocal(local);
                     match2ndLeg.setVisitor(visitor);*/
-                    matchRepository.save(match2ndLeg);
+                    matchRepo.save(match2ndLeg);
                     System.out.println("Round " + rounds + " 2nd leg match created");
                 }
                 Integer restantTeamsBF = numberTeams;
@@ -190,12 +210,12 @@ public class TournamentService {
                         match2ndLeg.setTournament(tournament);
                         match2ndLeg.setRound(currentRoundBF);
                         if(currentRoundBF == 1 ) {
-                            matchRepository.save(match);
+                            matchRepo.save(match);
                             System.out.println("Final round created");
                         } else {
-                            matchRepository.save(match);
+                            matchRepo.save(match);
                             System.out.println("Round " + currentRoundBF + " 1st leg match created");
-                            matchRepository.save(match2ndLeg);
+                            matchRepo.save(match2ndLeg);
                             System.out.println("Round " + currentRoundBF + " 2nd match created");
                         }
                     }
@@ -220,7 +240,7 @@ public class TournamentService {
                                 match.setRound(0);
                                 match.setLocal(team);
                                 match.setVisitor(rival);
-                                matchRepository.save(match);
+                                matchRepo.save(match);
 
                                 MatchMade matchMade = new MatchMade();
                                 matchMade.setTeam1(team);
@@ -241,7 +261,7 @@ public class TournamentService {
                             match.setRound(0);
                             match.setLocal(team);
                             match.setVisitor(rival);
-                            matchRepository.save(match);
+                            matchRepo.save(match);
                         }
                     });
                 });
@@ -271,7 +291,7 @@ public class TournamentService {
     private Integer getRounds(Integer numberTeams, Integer type) {
         switch (type) {
             case 1:
-                //keys
+                //keys tournament
                 switch (numberTeams) {
                     case 2: return 1;
                     case 4: return 2;
@@ -282,7 +302,7 @@ public class TournamentService {
                     default: return 0;
                 }
                 case 2:
-                    //keys back and forth
+                    //keys back and forth (except the final)
                 switch (numberTeams) {
                     case 2: return 1;
                     case 4: return 2;
@@ -293,7 +313,7 @@ public class TournamentService {
                     default: return 0;
                 }
             case 3:
-                //league
+                //league tournament
                 switch (numberTeams) {
                     case 2: return 1;
                     case 4: return 3;

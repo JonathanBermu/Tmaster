@@ -1,16 +1,13 @@
 package com.example.Users.Models;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class SportsModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
+    @Column(unique = true)
     private String name;
     //In case its a teams game it will have players, othewise it will take the team name as player (must have one player tough)
     private Integer hasPlayers;

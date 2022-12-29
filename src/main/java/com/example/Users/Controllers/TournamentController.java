@@ -9,6 +9,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @CrossOrigin(origins= "http://localhost:4000")
 public class TournamentController {
@@ -16,11 +18,11 @@ public class TournamentController {
     private TournamentService tournamentService;
     @PostMapping(value = "tournaments/create")
     public ResponseEntity createTournament(@RequestBody AddNewTournament request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
-        return tournamentService.addNewTournament(request, authorization);
+        return tournamentService.addNewTournament(request, authorization, Optional.empty());
     }
     @PostMapping(value = "tournaments/update")
     public ResponseEntity updateTournament(@RequestBody UpdateTournament request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
-        return tournamentService.updateTournament(request, authorization);
+        return tournamentService.updateTournament(request, authorization, Optional.empty());
     }
     @GetMapping(value = "tournaments/general")
     public ResponseEntity getTournaments() {
