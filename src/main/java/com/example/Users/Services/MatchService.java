@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -73,6 +74,21 @@ public class MatchService {
             return new ResponseEntity<>("Cannot do this action", HttpStatus.BAD_REQUEST);
         }
         List<MatchModel> matchesInRound = matchRepository.findByTournamentIdAndRound(tournament.getId(), req.getRound());
+
+        Integer currentRound = matchesInRound.get(0).getRound();
+        Integer previousRound = currentRound + 1;
+
+        boolean allMatchesEqualRound = matchesInRound.stream().allMatch(match1 -> match1.getRound() == currentRound);
+        if (!allMatchesEqualRound) {
+            return new ResponseEntity<>("You can only set the teams of one round at a time", HttpStatus.BAD_REQUEST);
+        }
+
+        List<MatchModel> previousRoundMatches = matchRepository.findByTournamentIdAndRound(tournament.getId(), previousRound);
+        boolean hasLocalAndVisitor = previousRoundMatches.stream().allMatch(match1 -> match1.getLocal() != null && match.getVisitor() != null);
+        if (!hasLocalAndVisitor && previousRoundMatches.size() > 0) {
+            return new ResponseEntity<>("You can only set this round until the previous round is set (only teams required)", HttpStatus.BAD_REQUEST);
+        }
+
         if(matchesInRound.size() > tournament.getTeams() / 2 ) {
             return new ResponseEntity<>("Cannot do this action", HttpStatus.BAD_REQUEST);
         }

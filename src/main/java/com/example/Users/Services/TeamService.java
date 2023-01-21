@@ -60,7 +60,8 @@ public class TeamService {
         String imgType = validateB64.imageType(request.getImg());
         TeamModel team = new TeamModel();
         team.setName(request.getName());
-        String imgName = awsS.addFile(request.getImg(), imgType);
+        /*String imgName = awsS.addFile(request.getImg(), imgType);*/
+        String imgName = "someimg";
         team.setImg(imgName + imgType);
         team.setState(1);
         team.setCountry(country);
