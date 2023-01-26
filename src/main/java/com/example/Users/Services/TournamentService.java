@@ -130,12 +130,10 @@ public class TournamentService {
 
     ResponseEntity validNumberTeams(Integer teamsAmount, AddNewTournament request) {
         if(teamsAmount != request.getTeams()) {
-            System.out.println("3");
-            return errors.badRequest();
+            return new ResponseEntity<>("Bad request", HttpStatus.BAD_REQUEST);
         }
         if(teamsAmount % 2 != 0) {
-            System.out.println("2");
-            return errors.badRequest();
+            return new ResponseEntity<>("Bad request", HttpStatus.BAD_REQUEST);
         }
         return null;
     }
@@ -156,8 +154,7 @@ public class TournamentService {
             }
         });
         if(!teamsTournamentSameSport.get()) {
-            System.out.println("1");
-            return errors.badRequest();
+            return new ResponseEntity<>("Bad request", HttpStatus.BAD_REQUEST);
         }
         return null;
     }
