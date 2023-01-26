@@ -75,7 +75,7 @@ public class MatchModel {
     }
 
     public void setId(Integer id) {
-        id = id;
+        this.id = id;
     }
 
     public Date getDate() {

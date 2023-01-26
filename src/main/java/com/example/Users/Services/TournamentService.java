@@ -4,10 +4,6 @@ import com.example.Users.Mocks.*;
 import com.example.Users.Models.*;
 import com.example.Users.Repositories.*;
 import com.example.Users.Types.Errors.Errors;
-import com.example.Users.Types.Interfaces.AWSServiceInterface;
-import com.example.Users.Types.Interfaces.ErrorsInterface;
-import com.example.Users.Types.Interfaces.PayloadServiceInterface;
-import com.example.Users.Types.Interfaces.ValidateBase64Interface;
 import com.example.Users.Types.MatchMade;
 import com.example.Users.Types.Tournaments.AddNewTournament;
 import com.example.Users.Types.Tournaments.UpdateTournament;
@@ -66,43 +62,93 @@ public class TournamentService {
     }
 
     public ResponseEntity updateTournament(UpdateTournament req, String auth, Optional<Boolean> mocking) throws JsonProcessingException {
-        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
-        TournamentRepository tournamentRepo = mocking.isPresent() ? new TournamentRespositoryMock() : tournamentRepository;
 
-        JsonNode userPayload = payloadS.getPayload(auth);
-        Tournament tournament = tournamentRepo.findById(req.getId()).get(0);
+        JsonNode userPayload = payloadService.getPayload(auth);
+        Tournament tournament = tournamentRepository.findById(req.getId()).get(0);
         if(tournament.getUser().getId() != userPayload.get("user_id").asInt()) {
             return new ResponseEntity<>("You can't perform this action", HttpStatus.BAD_REQUEST);
         }
         tournament.setName(req.getName());
-        tournamentRepo.save(tournament);
+        tournamentRepository.save(tournament);
         return new ResponseEntity<>("Tournament updated", HttpStatus.OK);
     }
 
     public ResponseEntity addNewTournament(AddNewTournament request, String authorization, Optional<Boolean> mocking) throws JsonProcessingException {
-        TeamRepository teamRepo = mocking.isPresent() ? new TeamRepositoryMock() : teamRepository;
-        PayloadServiceInterface payloadS = mocking.isPresent() ? new PayloadServiceMock() : payloadService;
-        SportsRepository sportsRepo = mocking.isPresent() ? new SportsRepositoryMock() : sportsRepository;
-        UserRepository userRepo = mocking.isPresent() ? new UserRepositoryMock() : userRepository;
-        TournamentRepository tournamentRepo = mocking.isPresent() ? new TournamentRespositoryMock() : tournamentRepository;
-        MatchRepository matchRepo = mocking.isPresent() ? new MatchRepositoryMock() : matchRepository;
-        LeaguePositionsRepository leaguePosRepo = mocking.isPresent() ? new LeaguePositionsMock() : leaguePositionsRepository;
-        ErrorsInterface errorsS = mocking.isPresent() ? new ErrorsMock() : errors;
 
-        JsonNode userPayload = payloadS.getPayload(authorization);
+        JsonNode userPayload = payloadService.getPayload(authorization);
         Integer teamsAmount = request.getTeamsIds().size();
+
+        ResponseEntity validNumberTeams = this.validNumberTeams(teamsAmount, request);
+        if(validNumberTeams != null) return validNumberTeams;
+
+        ArrayList<TeamModel> teams = this.getTeamsObjects(request);
+
+        ResponseEntity validSportsTeams = this.validSportsTeams(teams, request);
+        if(validSportsTeams != null) return validSportsTeams;
+
+        /* variables for key tournament*/
+        Integer numberTeams = request.getTeams();
+        Integer rounds = this.getRounds(numberTeams, request.getType());
+
+        SportsModel sport = sportsRepository.findById(request.getSport_id()).get(0);
+        UserModel user = userRepository.findById(Math.toIntExact(userPayload.get("user_id").asInt())).get(0);
+        Tournament tournament = this.createTournamentObj(request, rounds, user, sport);
+        tournamentRepository.save(tournament);
+
+        List<LeaguePositions> leaguePos = this.setLeaguePositionsNewTournament(teams, tournament);
+        leaguePositionsRepository.saveAll(leaguePos);
+
+
+        switch (request.getType()) {
+            //Single keys tournament
+            case 1:
+                List<MatchModel> matches = this.setSingleKeyTournaments(numberTeams, tournament, rounds);
+                matchRepository.saveAll(matches);
+                break;
+                //Back and forth tournament
+            case 2:
+                List<MatchModel> matches2 = this.setBFKeyTournament(numberTeams, tournament, rounds);
+                matchRepository.saveAll(matches2);
+                break;
+                //league
+            case 3:
+                List<MatchModel> matches3 = this.setLeagueTournament(teams, tournament);
+                matchRepository.saveAll(matches3);
+                break;
+            //league back and forth
+            case 4:
+                List<MatchModel> matches4 = this.setBFLeagueTournament(teams, tournament);
+                matchRepository.saveAll(matches4);
+                break;
+            default:
+                break;
+        }
+
+
+        return new ResponseEntity<>(teams, HttpStatus.OK);
+    }
+
+    ResponseEntity validNumberTeams(Integer teamsAmount, AddNewTournament request) {
         if(teamsAmount != request.getTeams()) {
-            System.out.println("omg1");
-            return errorsS.badRequest();
+            System.out.println("3");
+            return errors.badRequest();
         }
         if(teamsAmount % 2 != 0) {
-            System.out.println("omg2");
-            return errorsS.badRequest();
+            System.out.println("2");
+            return errors.badRequest();
         }
+        return null;
+    }
+
+    ArrayList<TeamModel> getTeamsObjects(AddNewTournament request) {
         ArrayList<TeamModel> teams = new ArrayList<>();
         request.getTeamsIds().forEach(el -> {
-             teams.add(teamRepo.findById(el).get(0));
+            teams.add(teamRepository.findById(el).get(0));
         });
+        return teams;
+    }
+
+    ResponseEntity validSportsTeams(ArrayList<TeamModel> teams, AddNewTournament request) {
         AtomicReference<Boolean> teamsTournamentSameSport = new AtomicReference<>(true);
         teams.forEach(team-> {
             if(team.getSport().getId() != request.getSport_id()) {
@@ -110,23 +156,25 @@ public class TournamentService {
             }
         });
         if(!teamsTournamentSameSport.get()) {
-            System.out.println("omg3");
-            return errorsS.badRequest();
+            System.out.println("1");
+            return errors.badRequest();
         }
-        /* variables for key tournament*/
-        Integer numberTeams = request.getTeams();
-        Integer rounds = this.getRounds(numberTeams, request.getType());
+        return null;
+    }
 
+    Tournament createTournamentObj(AddNewTournament request, Integer rounds, UserModel user, SportsModel sport) {
         Tournament tournament = new Tournament();
-        SportsModel sport = sportsRepo.findById(request.getSport_id()).get(0);
         tournament.setName(request.getName());
         tournament.setSport(sport);
         tournament.setTeams(request.getTeams());
         tournament.setRounds(rounds);
         tournament.setType(request.getType());
-        UserModel user = userRepo.findById(Math.toIntExact(userPayload.get("user_id").asInt())).get(0);
         tournament.setUser(user);
-        tournamentRepo.save(tournament);
+        return tournament;
+    }
+
+    List<LeaguePositions> setLeaguePositionsNewTournament(ArrayList<TeamModel> teams, Tournament tournament) {
+        List<LeaguePositions> leaguePositions = new ArrayList<>();
         teams.forEach(el -> {
             LeaguePositions result = new LeaguePositions();
             result.setTeamId(el);
@@ -137,144 +185,11 @@ public class TournamentService {
             result.setW(0);
             result.setGoalsAgainst(0);
             result.setTournament(tournament);
-            leaguePosRepo.save(result);
+            leaguePositions.add(result);
         });
-
-
-        switch (request.getType()) {
-            //Single keys tournament
-            case 1:
-               List<Integer> indexesOrder = this.RandomizeOrder(numberTeams);
-               for (Integer j = 0; j < numberTeams; j = j + 2) {
-                    /*TeamModel local = teams.get(indexesOrder.get(j));
-                    TeamModel visitor = teams.get(indexesOrder.get(j + 1));*/
-
-                    MatchModel match = new MatchModel();
-                    match.setTournament(tournament);
-                    match.setRound(rounds);
-                    /*match.setLocal(local);
-                    match.setVisitor(visitor);*/
-                   matchRepo.save(match);
-                    System.out.println("Round " + rounds + " match created");
-                }
-
-               Integer restantTeams = numberTeams;
-               Integer currentRound = rounds;
-                for(Integer k = rounds -1; k > 0; k--) {
-                     currentRound--;
-                    restantTeams /= 2;
-                    Integer finalK = k;
-                    for (Integer m = restantTeams; m > 0; m = m-2) {
-                        MatchModel match = new MatchModel();
-                        match.setTournament(tournament);
-                        match.setRound(currentRound);
-                        matchRepo.save(match);
-                        System.out.println("Round " + currentRound + " match created");
-                    }
-                }
-                break;
-                //Back and forth tournament
-            case 2:
-                List<Integer> indexesOrderBF = this.RandomizeOrder(numberTeams);
-                for (Integer j = 0; j < numberTeams; j = j + 2) {
-                    /*TeamModel local = teams.get(indexesOrderBF.get(j));
-                    TeamModel visitor = teams.get(indexesOrderBF.get(j + 1));*/
-                    MatchModel match = new MatchModel();
-                    match.setTournament(tournament);
-                    match.setRound(rounds);
-                    /*match.setLocal(local);
-                    match.setVisitor(visitor);*/
-                    matchRepo.save(match);
-                    System.out.println("Round " + rounds + " 1st leg match created");
-                    /*visitor = teams.get(indexesOrderBF.get(j));
-                    local = teams.get(indexesOrderBF.get(j + 1));*/
-                    MatchModel match2ndLeg = new MatchModel();
-                    match2ndLeg.setTournament(tournament);
-                    match2ndLeg.setRound(rounds);
-                    /*match2ndLeg.setLocal(local);
-                    match2ndLeg.setVisitor(visitor);*/
-                    matchRepo.save(match2ndLeg);
-                    System.out.println("Round " + rounds + " 2nd leg match created");
-                }
-                Integer restantTeamsBF = numberTeams;
-                Integer currentRoundBF = rounds;
-                for(Integer k = rounds -1; k > 0; k--) {
-                    currentRoundBF--;
-                    restantTeamsBF /= 2;
-                    Integer finalK = k;
-                    for (Integer m = restantTeamsBF; m > 0; m = m-2) {
-                        MatchModel match = new MatchModel();
-                        match.setTournament(tournament);
-                        match.setRound(currentRoundBF);
-                        MatchModel match2ndLeg = new MatchModel();
-                        match2ndLeg.setTournament(tournament);
-                        match2ndLeg.setRound(currentRoundBF);
-                        if(currentRoundBF == 1 ) {
-                            matchRepo.save(match);
-                            System.out.println("Final round created");
-                        } else {
-                            matchRepo.save(match);
-                            System.out.println("Round " + currentRoundBF + " 1st leg match created");
-                            matchRepo.save(match2ndLeg);
-                            System.out.println("Round " + currentRoundBF + " 2nd match created");
-                        }
-                    }
-                }
-
-                break;
-                //league
-            case 3:
-                List<MatchMade> matches = new ArrayList<>();
-                teams.forEach((team) -> {
-                    teams.forEach((rival) -> {
-                        if(team.getId() != rival.getId()) {
-                            AtomicReference<Boolean> repeated = new AtomicReference<>(false);
-                            matches.forEach((createdMatch) -> {
-                                if(createdMatch.getTeam1().getId() == rival.getId() && createdMatch.getTeam2().getId() == team.getId()) {
-                                    repeated.set(true);
-                                }
-                            });
-                            if(!repeated.get()) {
-                                MatchModel match = new MatchModel();
-                                match.setTournament(tournament);
-                                match.setRound(0);
-                                match.setLocal(team);
-                                match.setVisitor(rival);
-                                matchRepo.save(match);
-
-                                MatchMade matchMade = new MatchMade();
-                                matchMade.setTeam1(team);
-                                matchMade.setTeam2(rival);
-                                matches.add(matchMade);
-                            }
-                        }
-                    });
-                });
-                break;
-            //league back and forth
-            case 4:
-                teams.forEach((team) -> {
-                    teams.forEach((rival) -> {
-                        if(team.getId() != rival.getId()) {
-                            MatchModel match = new MatchModel();
-                            match.setTournament(tournament);
-                            match.setRound(0);
-                            match.setLocal(team);
-                            match.setVisitor(rival);
-                            matchRepo.save(match);
-                        }
-                    });
-                });
-                break;
-            default:
-                break;
-        }
-
-
-        return new ResponseEntity<>(teams, HttpStatus.OK);
+        return leaguePositions;
     }
-
-    private List<Integer> RandomizeOrder (Integer numberTeams) {
+    List<Integer> RandomizeOrder (Integer numberTeams) {
         List<Integer> indexesOrder = new ArrayList<Integer>();
         Random random = new Random();
         for (Integer i = 0; i < numberTeams; i++) {
@@ -288,7 +203,149 @@ public class TournamentService {
         return indexesOrder;
     }
 
-    private Integer getRounds(Integer numberTeams, Integer type) {
+    public List<MatchModel> setSingleKeyTournaments(int numberTeams, Tournament tournament, int rounds) {
+        List<Integer> indexesOrder = this.RandomizeOrder(numberTeams);
+        List<MatchModel> matches = new ArrayList<>();
+        List<MatchModel> firstRoundMatches = this.createFirstRoundMatches(numberTeams, tournament, rounds);
+        List<MatchModel> restRoundsMatches = this.createOtherRoundsMatches(numberTeams, tournament, rounds);
+        matches.addAll(firstRoundMatches);
+        matches.addAll(restRoundsMatches);
+        return matches;
+    }
+
+    List<MatchModel> createFirstRoundMatches(int numberTeams, Tournament tournament, int rounds) {
+        List<MatchModel> matches = new ArrayList<>();
+        for (Integer j = 0; j < numberTeams; j = j + 2) {
+            MatchModel match = new MatchModel();
+            match.setTournament(tournament);
+            match.setRound(rounds);
+            matches.add(match);
+        }
+        return matches;
+    }
+
+    List<MatchModel> createOtherRoundsMatches(int numberTeams, Tournament tournament, int rounds) {
+        List<MatchModel> matches = new ArrayList<>();
+        Integer restantTeams = numberTeams;
+        Integer currentRound = rounds;
+        for (Integer k = rounds - 1; k > 0; k--) {
+            currentRound--;
+            restantTeams /= 2;
+            for (Integer m = restantTeams; m > 0; m = m - 2) {
+                MatchModel match = new MatchModel();
+                match.setTournament(tournament);
+                match.setRound(currentRound);
+                matches.add(match);
+            }
+        }
+        return matches;
+    }
+
+
+
+    public List<MatchModel> setBFKeyTournament(int numberTeams, Tournament tournament, int rounds) {
+        List<MatchModel> matches = new ArrayList<>();
+        List<MatchModel> firstRoundMatches = this.createFirstRoundMatchesBF(numberTeams, tournament, rounds);
+        List<MatchModel> restRoundsMatches = this.createOtherRoundsMatchesBF(numberTeams, tournament, rounds);
+        matches.addAll(firstRoundMatches);
+        matches.addAll(restRoundsMatches);
+        return matches;
+    }
+
+    List<MatchModel> createFirstRoundMatchesBF(int numberTeams, Tournament tournament, int rounds) {
+        List<MatchModel> matches = new ArrayList<>();
+        for (Integer j = 0; j < numberTeams; j = j + 2) {
+            MatchModel match = new MatchModel();
+            match.setTournament(tournament);
+            match.setRound(rounds);
+            matches.add(match);
+            MatchModel match2ndLeg = new MatchModel();
+            match2ndLeg.setTournament(tournament);
+            match2ndLeg.setRound(rounds);
+            matches.add(match2ndLeg);
+        }
+        return matches;
+    }
+
+    List<MatchModel> createOtherRoundsMatchesBF(int numberTeams, Tournament tournament, int rounds) {
+        List<MatchModel> matches = new ArrayList<>();
+        Integer restantTeamsBF = numberTeams;
+        Integer currentRoundBF = rounds;
+        for(Integer k = rounds -1; k > 0; k--) {
+            currentRoundBF--;
+            restantTeamsBF /= 2;
+            Integer finalK = k;
+            for (Integer m = restantTeamsBF; m > 0; m = m-2) {
+                MatchModel match = new MatchModel();
+                match.setTournament(tournament);
+                match.setRound(currentRoundBF);
+                MatchModel match2ndLeg = new MatchModel();
+                match2ndLeg.setTournament(tournament);
+                match2ndLeg.setRound(currentRoundBF);
+                if(currentRoundBF == 1 ) {
+                    matches.add(match);
+                } else {
+                    matches.add(match);
+                    matches.add(match2ndLeg);
+                }
+            }
+        }
+        return matches;
+    }
+
+
+
+    public List<MatchModel> setLeagueTournament(ArrayList<TeamModel> teams, Tournament tournament) {
+        List<MatchMade> matchesMade = new ArrayList<>();
+        List<MatchModel> matches = new ArrayList<>();
+        teams.forEach((team) -> {
+            teams.forEach((rival) -> {
+                if(team.getId() != rival.getId()) {
+                    AtomicReference<Boolean> repeated = new AtomicReference<>(false);
+                    matchesMade.forEach((createdMatch) -> {
+                        if(createdMatch.getTeam1().getId() == rival.getId() && createdMatch.getTeam2().getId() == team.getId()) {
+                            repeated.set(true);
+                        }
+                    });
+                    if(!repeated.get()) {
+                        MatchModel match = new MatchModel();
+                        match.setTournament(tournament);
+                        match.setRound(0);
+                        match.setLocal(team);
+                        match.setVisitor(rival);
+                        matches.add(match);
+
+                        MatchMade matchMade = new MatchMade();
+                        matchMade.setTeam1(team);
+                        matchMade.setTeam2(rival);
+                        matchesMade.add(matchMade);
+                    }
+                }
+            });
+        });
+        return matches;
+    }
+
+
+    public List<MatchModel> setBFLeagueTournament(ArrayList<TeamModel> teams, Tournament tournament) {
+        List<MatchModel> matches = new ArrayList<>();
+        teams.forEach((team) -> {
+            teams.forEach((rival) -> {
+                if(team.getId() != rival.getId()) {
+                    MatchModel match = new MatchModel();
+                    match.setTournament(tournament);
+                    match.setRound(0);
+                    match.setLocal(team);
+                    match.setVisitor(rival);
+                    matches.add(match);
+                }
+            });
+        });
+        return matches;
+    }
+
+
+    Integer getRounds(Integer numberTeams, Integer type) {
         switch (type) {
             case 1:
                 //keys tournament
