@@ -4,6 +4,7 @@ import com.example.Users.Services.MatchService;
 import com.example.Users.Types.Match.SetMatchResults;
 import com.example.Users.Types.Match.SetMatchRound;
 import com.example.Users.Types.Match.SetMatchTeams;
+import com.example.Users.Types.Match.setDateMatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,11 @@ public class MatchController {
     @PostMapping(value = "matches/set_round")
     public ResponseEntity setMatchRound(@RequestBody SetMatchRound req) {
         return matchService.setMatchRound(req);
+    }
+
+    @PostMapping(value = "matches/set_date")
+    public ResponseEntity setMatchDate(@RequestBody setDateMatch req) {
+        return matchService.setDateMatch(req);
     }
 
     @PostMapping(value = "matches/set_teams")

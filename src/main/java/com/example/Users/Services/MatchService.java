@@ -8,10 +8,7 @@ import com.example.Users.Repositories.LeaguePositionsRepository;
 import com.example.Users.Repositories.MatchRepository;
 import com.example.Users.Repositories.TeamRepository;
 import com.example.Users.Repositories.TournamentRepository;
-import com.example.Users.Types.Match.MatchStatuses;
-import com.example.Users.Types.Match.SetMatchResults;
-import com.example.Users.Types.Match.SetMatchRound;
-import com.example.Users.Types.Match.SetMatchTeams;
+import com.example.Users.Types.Match.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +36,14 @@ public class MatchService {
         List<MatchModel> matches =  matchRepository.findByTournamentIdOrderByRoundAsc(tournamentId);
         return new ResponseEntity(matches, HttpStatus.OK);
     }
+
+    public ResponseEntity setDateMatch(setDateMatch req) {
+        MatchModel match = matchRepository.findById(req.getId()).get(0);
+        match.setDate(req.getDate());
+        matchRepository.save(match);
+        return new ResponseEntity("ok", HttpStatus.OK);
+    }
+
     public ResponseEntity setMatchResults(SetMatchResults req){
         MatchModel match = matchRepository.findById(req.getId()).get(0);
         match.setLocalScore(req.getLocalScore());
@@ -53,7 +58,6 @@ public class MatchService {
         MatchModel firstMatch = matchRepository.findById(req.get(0).getId()).get(0);
         Integer currentRound = req.get(0).getRound();
         Integer previousRound = currentRound + 1;
-
         ResponseEntity matchesHaveEqualRound = this.matchesHaveEqualRound(req, currentRound);
         if(matchesHaveEqualRound != null ) return matchesHaveEqualRound;
 
@@ -63,15 +67,16 @@ public class MatchService {
         if(previousRoundSet != null) return previousRoundSet;
         req.forEach(el -> {
             ResponseEntity res = this.setMatchRound(el);
+            System.out.println(res.getStatusCode());
             if(res.getStatusCode() != HttpStatus.OK) {
                 resArray.add(false);
             }
             resArray.add(true);
         });
         if(resArray.contains(false)) {
-            return new ResponseEntity<>("Round set successfully", HttpStatus.OK);
+            return new ResponseEntity<>("Error setting round", HttpStatus.CONFLICT);
         }
-        return new ResponseEntity<>("Error setting round", HttpStatus.CONFLICT);
+        return new ResponseEntity<>("Round set successfully", HttpStatus.OK);
 
     }
     ResponseEntity matchesHaveEqualRound(List<SetMatchRound> req, Integer currentRound) {
@@ -98,10 +103,10 @@ public class MatchService {
         if(validRound != null) return validRound;
 
         ResponseEntity rightNumberOfMatches = this.correctNumbersOfMatchesInRound(matchesInRound, tournament);
-        if(rightNumberOfMatches == null) return rightNumberOfMatches;
+        if(rightNumberOfMatches != null) return rightNumberOfMatches;
 
         ResponseEntity teamsPlayed = this.teamsPlayedCurrentRound(matchesInRound, match);
-        if(teamsPlayed == null) return teamsPlayed;
+        if(teamsPlayed != null) return teamsPlayed;
 
         ResponseEntity validMatchInRound = this.matchInRound(matchesInRound, match);
         if(validMatchInRound != null) return  validMatchInRound;
