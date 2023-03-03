@@ -3,9 +3,11 @@ package com.example.Users.Models;
 import javax.persistence.*;
 
 @Entity
+@Table
 public class TeamModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "team_sec")
+    @SequenceGenerator(sequenceName = "team_sec", allocationSize = 1, name = "team_sec")
     private Integer id;
     private String name;
     private Integer state;

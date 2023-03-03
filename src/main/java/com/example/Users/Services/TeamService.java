@@ -18,6 +18,9 @@ import com.example.Users.Types.Team.UpdateTeamType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -105,14 +108,16 @@ public class TeamService {
         return new ResponseEntity<>(teams, HttpStatus.OK);
     }
 
-    public ResponseEntity getUserTeams(String auth) throws IOException {
+    public ResponseEntity getUserTeams(String auth, String filter) throws IOException {
+        if(filter.equals("null")) filter = "";
+        Pageable pageable = PageRequest.of(0, 20);
         JsonNode userPayload = payloadService.getPayload(auth);
         System.out.println(userPayload.get("user_id"));
         Integer userId = Math.toIntExact(userPayload.get("user_id").asLong());
-        List<TeamModel> teams = teamRepository.findByUserIdAndStateOrderBySportId(Long.valueOf(userId), 1);
-        for (Integer i = 0; i < teams.size(); i++) {
+        Page<TeamModel> teams = teamRepository.findByUserIdAndStateAndNameContainingIgnoreCaseOrderBySportId(Long.valueOf(userId), 1, filter, pageable);
+        /*for (Integer i = 0; i < teams.size(); i++) {
             teams.get(i).setImg( aws.getObject(teams.get(i).getImg()));
-        }
+        }*/
         return new ResponseEntity<>(teams, HttpStatus.OK);
     }
 

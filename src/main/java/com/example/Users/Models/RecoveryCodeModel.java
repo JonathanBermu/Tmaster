@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Entity
+@Table
 public class RecoveryCodeModel {
     public Integer getId() {
         return id;
@@ -45,7 +46,8 @@ public class RecoveryCodeModel {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "recovery_sec")
+    @SequenceGenerator(sequenceName = "recovery_sec", allocationSize = 1, name = "recovery_sec")
     private Integer id;
     @Column(nullable = false)
     private String code;

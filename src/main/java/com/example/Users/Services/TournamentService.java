@@ -12,6 +12,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -43,21 +46,21 @@ public class TournamentService {
     @Autowired
     private LeaguePositionsRepository leaguePositionsRepository;
 
-    public ResponseEntity getAllTournaments() {
-        System.out.println(environment.getProperty("baeldung.presentation"));
-        List<Tournament> tournaments = (List<Tournament>) tournamentRepository.findAllByOrderByIdDesc();
-        if(tournaments.size() == 0) {
-            return new ResponseEntity("Not enough tournaments", HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity getAllTournaments(String filter) {
+        if(filter.equals("null")) filter = "";
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Tournament> tournaments = tournamentRepository.findByNameContainingIgnoreCaseOrderById(filter, pageable);
         return new ResponseEntity(tournaments, HttpStatus.OK);
     }
     public ResponseEntity getTournament(Integer id) {
         Tournament tournament = tournamentRepository.findById(id).get(0);
         return new ResponseEntity<>(tournament, HttpStatus.OK);
     }
-    public ResponseEntity getAllTournamentsUser(String auth) throws JsonProcessingException {
+    public ResponseEntity getAllTournamentsUser(String auth, String filter) throws JsonProcessingException {
+        if(filter.equals("null")) filter = "";
+        Pageable pageable = PageRequest.of(0, 20);
         JsonNode userPayload = payloadService.getPayload(auth);
-        List<Tournament> tournaments = tournamentRepository.findByUserId(userPayload.get("user_id").asLong());
+        Page<Tournament> tournaments = tournamentRepository.findByUserIdAndNameContainingIgnoreCaseOrderById(userPayload.get("user_id").asLong(), filter, pageable);
         return new ResponseEntity(tournaments, HttpStatus.OK);
     }
 

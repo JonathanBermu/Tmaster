@@ -24,9 +24,9 @@ public class TournamentController {
     public ResponseEntity updateTournament(@RequestBody UpdateTournament request, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
         return tournamentService.updateTournament(request, authorization, Optional.empty());
     }
-    @GetMapping(value = "tournaments/general")
-    public ResponseEntity getTournaments() {
-        return tournamentService.getAllTournaments();
+    @GetMapping(value = "tournaments/general/{filter}")
+    public ResponseEntity getTournaments(@PathVariable(name = "filter") String filter) {
+        return tournamentService.getAllTournaments(filter);
     }
 
     @GetMapping(value = "tournaments/{id}")
@@ -34,8 +34,8 @@ public class TournamentController {
         return  tournamentService.getTournament(id);
     }
 
-    @GetMapping(value = "tournaments/user")
-    public ResponseEntity getUserTournaments(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws JsonProcessingException {
-        return tournamentService.getAllTournamentsUser(authorization);
+    @GetMapping(value = "tournaments/user/{filter}")
+    public ResponseEntity getUserTournaments(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization, @PathVariable(name = "filter") String filter) throws JsonProcessingException {
+        return tournamentService.getAllTournamentsUser(authorization, filter);
     }
 }

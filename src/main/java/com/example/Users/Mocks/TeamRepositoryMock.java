@@ -4,6 +4,8 @@ import com.example.Users.Models.SportsModel;
 import com.example.Users.Models.TeamModel;
 import com.example.Users.Models.UserModel;
 import com.example.Users.Repositories.TeamRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -95,9 +97,11 @@ public class TeamRepositoryMock implements TeamRepository {
     }
 
     @Override
-    public List<TeamModel> findByUserIdAndStateOrderBySportId(Long id, Integer state) {
+    public Page<TeamModel> findByUserIdAndStateAndNameContainingIgnoreCaseOrderBySportId(Long id, Integer state, String filter, Pageable pageable) {
         return null;
     }
+
+
 
     @Override
     public List<TeamModel> findByState(Integer state) {

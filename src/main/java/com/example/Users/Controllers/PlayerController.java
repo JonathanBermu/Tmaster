@@ -29,9 +29,9 @@ public class PlayerController {
         return playerService.deletePlayer(request);
     }
 
-    @GetMapping(value = "players/all")
-    public ResponseEntity getAllPlayers() {
-        return playerService.getAllPlayers();
+    @GetMapping(value = "players/all/{filter}/{page}")
+    public ResponseEntity getAllPlayers(@PathVariable String filter, @PathVariable int page) {
+        return playerService.getAllPlayers(filter, page);
     }
     @GetMapping(value = "players/all/country/{countryId}")
     public ResponseEntity getAllPlayersByCountryId(@PathVariable("countryId") Integer countryId) {

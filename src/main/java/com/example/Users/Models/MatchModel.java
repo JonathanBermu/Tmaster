@@ -6,9 +6,10 @@ import java.util.Date;
 @Entity
 public class MatchModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "match_sec")
+    @SequenceGenerator(sequenceName = "match_sec", allocationSize = 1, name = "match_sec")
     private Integer id;
-    private Date date;
+    private Date datem;
     private Integer winner;
     private Integer visitorScore;
     private Integer localScore;
@@ -16,6 +17,18 @@ public class MatchModel {
     private Integer round;
     private Integer localScorePens;
     private Integer visitorScorePens;
+
+    @ManyToOne
+    @JoinColumn(name = "tournament_id", nullable = true)
+    private Tournament tournament;
+
+    @ManyToOne
+    @JoinColumn(name = "visitor", nullable = true)
+    private TeamModel visitor;
+
+    @ManyToOne
+    @JoinColumn(name = "local", nullable = true)
+    private TeamModel local;
 
     public Integer getLocalScorePens() {
         return localScorePens;
@@ -32,18 +45,6 @@ public class MatchModel {
     public void setVisitorScorePens(Integer visitorScorePens) {
         this.visitorScorePens = visitorScorePens;
     }
-
-    @ManyToOne
-    @JoinColumn(name = "tournament_id", nullable = true)
-    private Tournament tournament;
-
-    @ManyToOne
-    @JoinColumn(name = "visitor", nullable = true)
-    private TeamModel visitor;
-
-    @ManyToOne
-    @JoinColumn(name = "local", nullable = true)
-    private TeamModel local;
 
 
     public Integer getWinner() {
@@ -79,11 +80,11 @@ public class MatchModel {
     }
 
     public Date getDate() {
-        return date;
+        return datem;
     }
 
     public void setDate(Date date) {
-        this.date = date;
+        this.datem = date;
     }
 
     public Tournament getTournament() {

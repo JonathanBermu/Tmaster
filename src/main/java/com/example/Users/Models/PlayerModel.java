@@ -4,9 +4,11 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
+@Table
 public class PlayerModel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "player_sec")
+    @SequenceGenerator(sequenceName = "player_sec", allocationSize = 1, name = "player_sec")
     private Integer id;
     private String name;
     private String lastName;

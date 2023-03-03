@@ -36,9 +36,9 @@ public class TeamController {
         return teamService.getAllTeams();
     }
 
-    @GetMapping(value = "teams/user")
-    public ResponseEntity getUserTeam(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws IOException {
-        return teamService.getUserTeams(authorization);
+    @GetMapping(value = "teams/user/{filter}")
+    public ResponseEntity getUserTeam(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization, @PathVariable(name = "filter") String filter) throws IOException {
+        return teamService.getUserTeams(authorization, filter);
     }
     @GetMapping(value = "teams/all/{CountryId}")
     public ResponseEntity getAllTeamsByCountry(@PathVariable("CountryId") Integer countryId) {

@@ -4,6 +4,8 @@ import com.example.Users.Models.SportsModel;
 import com.example.Users.Models.Tournament;
 import com.example.Users.Models.UserModel;
 import com.example.Users.Repositories.TournamentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,18 @@ public class TournamentRespositoryMock implements TournamentRepository {
     public List<Tournament> findAllByOrderByIdDesc() {
         return null;
     }
+
+    @Override
+    public Page<Tournament> findByNameContainingIgnoreCaseOrderById(String filter, Pageable pageable) {
+        return null;
+    }
+
+
+    @Override
+    public Page<Tournament> findByUserIdAndNameContainingIgnoreCaseOrderById(Long id, String filter, Pageable pageable) {
+        return null;
+    }
+
 
     @Override
     public <S extends Tournament> S save(S entity) {

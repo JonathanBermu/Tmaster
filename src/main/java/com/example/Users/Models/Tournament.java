@@ -3,8 +3,10 @@ package com.example.Users.Models;
 import javax.persistence.*;
 
 @Entity
+@Table
 public class Tournament {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tournament_sec")
+    @SequenceGenerator(sequenceName = "tournament_sec", allocationSize = 1, name = "tournament_sec")
     @Id
     private Integer id;
     private String name;
