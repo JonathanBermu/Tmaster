@@ -73,7 +73,7 @@ public class UserService {
         String dataRole = resuser.get(0).getRole();
         if(passwordEncryptor.checkPassword(request.getPassword(), dataPasswordEncrypted)) {
             Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-            String secret =  "MichaelJacksonIsVeryVeryVeryBlackIMnOtGoingtolie";
+            String secret =  "someRandomSecretKey";
             Key secretKey = new SecretKeySpec(Base64.getDecoder().decode(secret),
                     SignatureAlgorithm.HS256.getJcaName());
             String jwt = Jwts.builder()
@@ -176,7 +176,7 @@ public class UserService {
         userRepository.save(user);
 
         Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        String secret =  "MichaelJacksonIsVeryVeryVeryBlackIMnOtGoingtolie";
+        String secret =  "someRandomSecretKey";
         Key secretKey = new SecretKeySpec(Base64.getDecoder().decode(secret),
                 SignatureAlgorithm.HS256.getJcaName());
         String jwt = Jwts.builder()

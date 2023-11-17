@@ -40,7 +40,7 @@ public class HttpInterceptor implements HandlerInterceptor {
         ) {
             String auth = request.getHeader("Authorization");
             auth = auth.replace("Bearer ", "");
-            String secret =  "MichaelJacksonIsVeryVeryVeryBlackIMnOtGoingtolie";
+            String secret =  "someRandomSecretKey";
             Key secretKey = new SecretKeySpec(Base64.getDecoder().decode(secret),
                     SignatureAlgorithm.HS256.getJcaName());
             Jws<Claims> jws = Jwts.parserBuilder()

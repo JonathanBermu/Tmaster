@@ -24,6 +24,7 @@ import java.util.UUID;
 
 @Service
 public class AWSService implements AWSServiceInterface {
+    //Deactivated credentials
     AWSCredentials credentials = new BasicAWSCredentials("AKIAX2LFZLO6VEG7YSM4", "aZIrlLzbs5k22IOs7sEA7k5lCRal2zJBrkctayYy");
     AmazonS3 s3client = AmazonS3ClientBuilder
             .standard()
