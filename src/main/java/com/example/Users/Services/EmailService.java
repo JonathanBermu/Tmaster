@@ -11,9 +11,9 @@ public class EmailService{
 
     public Boolean sendMail(String mail){
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("jonathanbermudez518@gmail.com");
+        message.setFrom("fromEmail@gmail.com");
         message.setText(mail);
-        message.setTo("jonathan@trezlabs.com");
+        message.setTo("toEmail@gmail.com");
         message.setSubject("Testing");
         emailSender.send(message);
         return true;

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.security.Key;
 import java.util.*;
 
+//Most of this service is deprecated, change to use OAuth 2.0 only
 @Service
 public class UserService {
     public UserService() {
